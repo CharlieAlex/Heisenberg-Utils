@@ -1,0 +1,90 @@
+[project]
+name = "heisenberg-utils"
+version = "0.1.0"
+description = "This is a repository for my personal utils functions."
+authors = [{ name = "Heisenberg", email = "charliealex0101@gmail.com" }]
+requires-python = "==3.12.5"
+
+dependencies = [
+    # Python
+    "pip==24.2.0",
+    "python-dotenv==1.0.1",
+    "pydantic",
+    # Data Science
+    "numpy==1.26.4",
+    "numba==0.61.2",
+    "pandas==2.2.3",
+    "matplotlib==3.9.4",
+    "seaborn==0.13.2",
+    "ipywidgets==8.1.5",
+    "jupyterlab",
+    "joblib==1.4.2",
+    # Google Cloud & Database
+    "google-cloud-bigquery==3.29.0",
+    "google-cloud-bigquery-storage==2.28.0",
+    "google-cloud-storage==3.2.0",
+    "db-dtypes==1.4.3",
+    "pygsheets==2.0.6",
+    # Logging & Experiment Tracking
+    "loguru==0.7.3",
+    "tabulate>=0.9.0",
+    "nbstripout>=0.8.1",
+    # dev tools
+    "ipykernel==6.29.5",
+]
+
+[tool.ruff]
+line-length = 120
+indent-width = 4
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "W",
+    "F",
+    "I",
+    "B",
+    "C4",
+    "UP",
+    "PL",
+    "NPY",
+    "PD",
+    "TID",
+    "T",
+]
+preview = true
+ignore = [
+    "E226",
+    "E227",
+    "E252",
+    "E402",
+    "B006",
+    "B008",
+    "B905",
+    "C901",
+    "W191",
+    "UP045",
+    "PLR0913",
+    "PLR0917",
+    "PLR0912",
+    "PLR0914",
+    "PLR0915",
+    "PLR2004",
+    "PLR6104",
+    "PD015",
+    "D100",
+    "D400",
+    "D409",
+]
+unfixable = [
+    "D",
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[project.urls]
+"Homepage" = "https://github.com/CharlieAlex/heisenberg-utils"
+"Bug Tracker" = "https://github.com/CharlieAlex/heisenberg-utils/issues"
