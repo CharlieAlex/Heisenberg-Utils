@@ -3,7 +3,6 @@ from typing import Any, Literal
 import cloudpickle
 import joblib
 from loguru import logger
-from sklearn.base import BaseEstimator
 
 from .config_utils import set_models_path
 
@@ -11,7 +10,7 @@ MODELS_PATH = set_models_path()
 
 
 def save_model(
-    model: BaseEstimator | Any,
+    model: Any,
     path: str,
     name: str,
     dump_method: Literal['joblib', 'cloudpickle'] = 'joblib',

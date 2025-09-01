@@ -7,7 +7,7 @@ from typing import Any, Optional
 
 from loguru import logger
 
-DATA_PATH = Path(os.environ['DATA_PATH'])
+DATA_PATH = Path(os.environ['MAIN_PATH']) / 'data'
 
 
 def remove_stderr_handlers(

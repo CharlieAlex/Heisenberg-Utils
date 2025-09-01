@@ -214,3 +214,4 @@ def set_all_path() -> None:
     set_dr_tester_path()
     set_mlruns_path()
     set_sa_path()
+    set_queries_path()
