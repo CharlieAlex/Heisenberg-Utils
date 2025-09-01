@@ -8,8 +8,7 @@ from google.cloud import bigquery
 from google.oauth2 import service_account
 from loguru import logger
 
-credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-
+credentials_path = Path(os.getenv("GOOGLE_APPLICATION_CREDENTIALS", ""))
 logger.debug(f"bigquery_utils.py 憑證路徑: {credentials_path}")
 BQ_CLIENT = bigquery.Client(credentials=service_account.Credentials.from_service_account_file(credentials_path))
 

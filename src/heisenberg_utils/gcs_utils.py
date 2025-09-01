@@ -9,6 +9,7 @@ from loguru import logger
 
 load_dotenv()
 credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+logger.debug(f"bigquery_utils.py 憑證路徑: {credentials_path}")
 gcs_client = storage.Client(credentials=service_account.Credentials.from_service_account_file(credentials_path))
 
 
