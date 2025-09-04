@@ -3,33 +3,34 @@ import os
 import sys
 from pathlib import Path
 from pprint import pprint
-from typing import Any, Optional
+from typing import Optional
 
 from loguru import logger
 
-DATA_PATH = Path(os.environ['MAIN_PATH']) / 'data'
+
+def show_handlers():
+    """顯示目前的處理器。
+    """
+
+    current_handlers = logger._core.handlers.copy()  # type: ignore
+    return current_handlers
 
 
-def remove_stderr_handlers(
-    logger_instance: Any = logger,
-    id: Optional[int | str] = None,
-    show_latest_handlers: bool = False
-):
+def remove_stderr_handlers(id: Optional[int | str] = None, show_handlers: bool = False):
     """
     移除指定的處理器
 
     Args:
-        logger_instance (Any, optional): 要操作的 logger 實例
         id (Optional[Union[int, str]], optional):
             要移除的處理器 ID，可以是：
             - None: 顯示目前處理器，讓用戶手動選擇輸入
             - 單個整數: 直接移除該 ID 的處理器
             - 逗號分隔的字串: 移除多個處理器，如 "1,2,3"
-        show_latest_handlers (bool, optional):
+        show_handlers (bool, optional):
             是否在操作完成後顯示最新的處理器狀態。預設為 False。
     """
 
-    current_handlers = logger_instance._core.handlers.copy()  # type: ignore
+    current_handlers = logger._core.handlers.copy()  # type: ignore
     removed_count = 0
 
     if id is None:
@@ -56,27 +57,51 @@ def remove_stderr_handlers(
     # 移除指定的處理器
     for handler_id in id_list:
         if handler_id in current_handlers:
-            logger_instance.remove(handler_id)
+            logger.remove(handler_id)
             removed_count += 1
             logger.info(f"已移除處理器 ID: {handler_id}")
         else:
             logger.info(f"處理器 ID {handler_id} 不存在")
 
-    logger_instance.info(f'總共移除了 {removed_count} 個處理器')
+    logger.info(f'總共移除了 {removed_count} 個處理器')
 
     # 如果需要顯示最新狀態
-    if show_latest_handlers:
-        latest_handlers = logger_instance._core.handlers.copy()  # type: ignore
+    if show_handlers:
+        latest_handlers = logger._core.handlers.copy()  # type: ignore
         pprint(latest_handlers)
 
 
-logger.remove()
+def start_log(level: str = "DEBUG", return_handlers: bool = False) -> Optional[tuple[int, int]]:
+    """新增一個輸出處理器
 
-file_handler_id = logger.add(
-    DATA_PATH / 'log' / 'output.log',
-    format="{time} {level} {message}",
-    rotation="1 week",
-    level="INFO",
-)
+    Args:
+        level (str, optional): 設定處理器的日誌等級，預設為 "DEBUG"
+        format (str, optional): 設定日誌輸出的格式，預設為 "{time} {level} {message}"
+        show_handlers (bool, optional):
+            是否在操作完成後顯示最新的處理器狀態。預設為 False。
 
-stderr_handler_id = logger.add(sys.stderr, level="DEBUG")
+    Returns:
+        int: 新增的處理器 ID
+    """
+    logger.remove()  # 移除所有現有處理器
+
+    MAIN_PATH = os.getenv('MAIN_PATH')
+    if not MAIN_PATH:
+        raise OSError("環境變數 'MAIN_PATH' 未設定")
+
+    file_handler_id = logger.add(
+        Path(MAIN_PATH) / 'data' / 'log' / 'output.log',
+        format="{time} {level} {message}",
+        level=level,
+        rotation="1 week",
+    )
+
+    stderr_handler_id = logger.add(
+        sys.stderr,
+        level=level,
+    )
+
+    logger.info(f"開始用以下 ID 紀錄 {level} 層級以上訊息: {file_handler_id, stderr_handler_id}")
+
+    if return_handlers:
+        return file_handler_id, stderr_handler_id
