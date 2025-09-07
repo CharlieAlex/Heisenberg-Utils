@@ -9,7 +9,6 @@ from google.oauth2 import service_account
 from loguru import logger
 
 credentials_path = Path(os.getenv("GOOGLE_APPLICATION_CREDENTIALS", ""))
-logger.debug(f"bigquery_utils.py 憑證路徑: {credentials_path}")
 BQ_CLIENT = bigquery.Client(credentials=service_account.Credentials.from_service_account_file(credentials_path))
 
 
@@ -72,9 +71,13 @@ def script_to_df(
             logger.info("取消查詢。")
             return pd.DataFrame()  # 回傳空 DataFrame
 
-    job = bq_client.query(query_script, job_config=job_config)
-    job.result()
-    df = job.to_dataframe()
+    try:
+        job = bq_client.query(query_script, job_config=job_config)
+        job.result()
+        df = job.to_dataframe()
+    except Exception as e:
+        logger.error(f'執行查詢錯誤: {e}')
+        logger.debug(f"bigquery_utils.py 憑證路徑: {credentials_path}")
 
     if save_path is not None:
         df.to_csv(save_path, index=False)
