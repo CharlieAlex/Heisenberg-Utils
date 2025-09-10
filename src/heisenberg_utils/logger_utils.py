@@ -1,4 +1,5 @@
 # ruff: noqa: T203
+import logging
 import os
 import sys
 from pathlib import Path
@@ -105,3 +106,66 @@ def start_log(level: str = "DEBUG", return_handlers: bool = False) -> Optional[t
 
     if return_handlers:
         return file_handler_id, stderr_handler_id
+
+
+def redirect_libraries_logging_to_loguru(log_level_map: dict[str, str]):
+    """
+    攔截並重定向指定函式庫的日誌訊息，統一由 Loguru 處理。
+
+    Args:
+        log_level_map (Dict[str, str], optional):
+            一個字典，key 為函式庫的 logger 名稱 (e.g., "optuna", "mlflow"),
+            value 為希望攔截的最低日誌級別 (e.g., "INFO")。
+    """
+
+    class InterceptHandler(logging.Handler):
+        """
+        一個將標準 logging 訊息重定向到 Loguru 的處理器。
+        """
+        def emit(self, record: logging.LogRecord) -> None:  # noqa: PLR6301
+            try:
+                level = logger.level(record.levelname).name
+            except ValueError:
+                level = record.levelno
+
+            frame, depth = logging.currentframe(), 2
+            while frame and frame.f_code.co_filename == logging.__file__:
+                frame = frame.f_back
+                depth += 1
+
+            logger.opt(depth=depth, exception=record.exc_info).log(
+                level,
+                record.getMessage(),
+            )
+
+    LEVEL_MAPPING = {
+        'NOTSET': logging.NOTSET,
+        'DEBUG': logging.DEBUG,
+        'INFO': logging.INFO,
+        'WARNING': logging.WARNING,
+        'ERROR': logging.ERROR,
+        'CRITICAL': logging.CRITICAL
+    }
+
+    log_level_map_processed = {
+        module: LEVEL_MAPPING[level.upper()]
+        for module, level in log_level_map.items()
+    }
+
+    # 建立一個共用的攔截器實例
+    handler = InterceptHandler()
+
+    for lib_name, level in log_level_map_processed.items():
+        # 取得目標函式庫的 logger
+        lib_logger = logging.getLogger(lib_name)
+
+        # 清除已存在的處理器，避免重複輸出
+        lib_logger.handlers.clear()
+
+        # 設定希望攔截的最低級別
+        lib_logger.setLevel(level)
+
+        # 加入我們自訂的攔截處理器
+        lib_logger.addHandler(handler)
+
+        logger.info(f"Redirected '{lib_name}' logging to Loguru at level {logging.getLevelName(level)}.")
