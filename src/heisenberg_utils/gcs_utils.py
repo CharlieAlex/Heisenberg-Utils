@@ -42,7 +42,7 @@ def upload_to_gcs(
     """
     try:
         bucket = gcs_client.bucket(bucket_name)
-        blob = bucket.blob(destination_blob_name)
+        blob = bucket.blob(str(destination_blob_name))
         blob.upload_from_filename(local_file_path)
 
         logger.info(f"✅ 檔案成功上傳：{local_file_path} → gs://{bucket_name}/{destination_blob_name}")
@@ -80,7 +80,7 @@ def download_from_gcs(
     """
     try:
         bucket = gcs_client.bucket(bucket_name)
-        blob = bucket.blob(blob_name)
+        blob = bucket.blob(str(blob_name))
 
         blob.download_to_filename(local_file_path)
         logger.info(f"✅ 已成功下載：gs://{bucket_name}/{blob_name} → {local_file_path}")
@@ -126,7 +126,7 @@ def delete_from_gcs(
     """從 GCS Bucket 刪除一個物件。"""
     try:
         bucket = gcs_client.bucket(bucket_name)
-        blob = bucket.blob(blob_name)
+        blob = bucket.blob(str(blob_name))
 
         if not blob.exists():
             logger.warning(f"⚠️ 嘗試刪除但檔案不存在：gs://{bucket_name}/{blob_name}")
@@ -167,7 +167,7 @@ def generate_signed_url(
     ```
     """
     bucket = gcs_client.bucket(bucket_name)
-    blob = bucket.blob(blob_name)
+    blob = bucket.blob(str(blob_name))
 
     url = blob.generate_signed_url(
         version="v4",
