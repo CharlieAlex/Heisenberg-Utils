@@ -1,6 +1,6 @@
 [project]
 name = "heisenberg-utils"
-version = "0.1.5"
+version = "0.1.6"
 description = "This is a repository for my personal utils functions."
 authors = [{ name = "Heisenberg", email = "charliealex0101@gmail.com" }]
 requires-python = "==3.12.5"

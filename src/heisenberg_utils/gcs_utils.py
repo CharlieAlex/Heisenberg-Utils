@@ -10,7 +10,6 @@ from loguru import logger
 
 load_dotenv()
 credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-logger.debug(f"bigquery_utils.py 憑證路徑: {credentials_path}")
 gcs_client = storage.Client(credentials=service_account.Credentials.from_service_account_file(credentials_path))
 
 
@@ -105,7 +104,7 @@ def sync_gcs_file_to_local(
     """
     try:
         bucket = gcs_client.bucket(bucket_name)
-        blob = bucket.blob(gcs_blob_name)
+        blob = bucket.blob(str(gcs_blob_name))
 
         if blob.exists():
             logger.info(f"發現遠端檔案 gs://{bucket_name}/{gcs_blob_name}，正在同步至本地...")
