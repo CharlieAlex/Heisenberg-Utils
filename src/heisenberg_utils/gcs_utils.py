@@ -1,5 +1,6 @@
 import os
 from datetime import timedelta
+from pathlib import Path
 
 import requests
 from dotenv import load_dotenv
@@ -15,8 +16,8 @@ gcs_client = storage.Client(credentials=service_account.Credentials.from_service
 
 def upload_to_gcs(
     bucket_name: str,
-    local_file_path: str,
-    destination_blob_name: str,
+    local_file_path: str | Path,
+    destination_blob_name: str | Path,
     gcs_client: storage.Client=gcs_client,
 ) -> None:
     """
@@ -45,7 +46,7 @@ def upload_to_gcs(
         blob = bucket.blob(destination_blob_name)
         blob.upload_from_filename(local_file_path)
 
-        logger.success(f"✅ 檔案成功上傳：{local_file_path} → gs://{bucket_name}/{destination_blob_name}")
+        logger.info(f"✅ 檔案成功上傳：{local_file_path} → gs://{bucket_name}/{destination_blob_name}")
 
     except Exception as e:
         logger.error(f"❌ 上傳失敗：{e}")
@@ -53,8 +54,8 @@ def upload_to_gcs(
 
 def download_from_gcs(
     bucket_name: str,
-    blob_name: str,
-    local_file_path: str,
+    blob_name: str | Path,
+    local_file_path: str | Path,
     gcs_client: storage.Client=gcs_client,
 ) -> None:
     """
@@ -83,15 +84,65 @@ def download_from_gcs(
         blob = bucket.blob(blob_name)
 
         blob.download_to_filename(local_file_path)
-        logger.success(f"✅ 已成功下載：gs://{bucket_name}/{blob_name} → {local_file_path}")
+        logger.info(f"✅ 已成功下載：gs://{bucket_name}/{blob_name} → {local_file_path}")
 
     except Exception as e:
         logger.error(f"❌ 下載失敗：{e}")
 
 
+def sync_gcs_file_to_local(
+    bucket_name: str,
+    gcs_blob_name: str | Path,
+    local_file_path: str | Path,
+    gcs_client: storage.Client = gcs_client,
+) -> bool:
+    """
+    檢查 GCS 上的檔案是否存在，如果存在，則同步（下載）到本地。
+    這滿足了您不使用 try-except 來判斷存在性的需求。
+
+    Returns:
+        bool: 如果檔案存在且成功下載，回傳 True；否則回傳 False。
+    """
+    try:
+        bucket = gcs_client.bucket(bucket_name)
+        blob = bucket.blob(gcs_blob_name)
+
+        if blob.exists():
+            logger.info(f"發現遠端檔案 gs://{bucket_name}/{gcs_blob_name}，正在同步至本地...")
+            download_from_gcs(bucket_name, gcs_blob_name, local_file_path, gcs_client)   # type: ignore
+            return True
+        else:
+            logger.info(f"遠端檔案 gs://{bucket_name}/{gcs_blob_name} 不存在，將在本地建立新檔案。")
+            return False
+    except Exception as e:
+        logger.error(f"❌ 同步 GCS 檔案時發生錯誤：{e}")
+        return False
+
+
+def delete_from_gcs(
+    bucket_name: str,
+    blob_name: str | Path,
+    gcs_client: storage.Client = gcs_client,
+) -> None:
+    """從 GCS Bucket 刪除一個物件。"""
+    try:
+        bucket = gcs_client.bucket(bucket_name)
+        blob = bucket.blob(blob_name)
+
+        if not blob.exists():
+            logger.warning(f"⚠️ 嘗試刪除但檔案不存在：gs://{bucket_name}/{blob_name}")
+            return
+
+        blob.delete()
+        logger.info(f"✅ 檔案成功刪除：gs://{bucket_name}/{blob_name}")
+
+    except Exception as e:
+        logger.error(f"❌ 刪除 GCS 檔案時發生錯誤：{e}")
+
+
 def generate_signed_url(
     bucket_name: str,
-    blob_name: str,
+    blob_name: str | Path,
     expiration_minutes: int = 15,
     gcs_client: storage.Client=gcs_client,
 ) -> str:
@@ -128,7 +179,7 @@ def generate_signed_url(
     return url
 
 
-def download_from_signed_url(signed_url: str, save_path: str):
+def download_from_signed_url(signed_url: str, save_path: str | Path):
     """
     從簽名 URL 下載檔案到本地
 
