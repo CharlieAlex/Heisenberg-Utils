@@ -2,6 +2,7 @@
 import logging
 import os
 import sys
+from contextlib import contextmanager
 from pathlib import Path
 from pprint import pprint
 from typing import Optional
@@ -169,3 +170,19 @@ def redirect_libraries_logging_to_loguru(log_level_map: dict[str, str]):
         lib_logger.addHandler(handler)
 
         logger.info(f"Redirected '{lib_name}' logging to Loguru at level {logging.getLevelName(level)}.")
+
+
+@contextmanager
+def suppress_stdout():
+    """一個上下文管理器，可以暫時抑制(suppress)區塊內的標準輸出。
+    """
+    # 將當前的 stdout 保存起來
+    original_stdout = sys.stdout
+    # 在 try 區塊中，將 stdout 指向 os.devnull
+    try:
+        sys.stdout = open(os.devnull, 'w')  # noqa: PLW1514
+        yield
+    # 無論如何，在 finally 區塊中確保恢復原始的 stdout
+    finally:
+        sys.stdout.close()
+        sys.stdout = original_stdout
